@@ -12,7 +12,7 @@ namespace ArgonFetch.Application.Services.DDLFetcherServices
         private static readonly HttpClient _httpClient = new HttpClient();
         private readonly HtmlParser _htmlParser = new HtmlParser();
 
-        public async Task<MediaInformationDto> FetchLinkAsync(string dllName, DllFetcherOptions dllFetcherOptions = null, CancellationToken cancellationToken = default)
+        public async Task<MediaInformationDto> FetchLinkAsync(string dllName, DllFetcherOptions? dllFetcherOptions = null, CancellationToken cancellationToken = default)
         {
             string baseUrl = "https://tmate.cc";
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
@@ -50,8 +50,8 @@ namespace ArgonFetch.Application.Services.DDLFetcherServices
                     RequestedUrl = CleanHtml(dllName),
                     StreamingUrl = CleanHtml(downloadLink),
                     CoverUrl = CleanHtml(imageUrl),
-                    Title = CleanHtml(title),
-                    Author = CleanHtml(author)
+                    Title = CleanHtml(title ?? string.Empty),
+                    Author = CleanHtml(author ?? string.Empty)
                 };
             }
             else
@@ -66,6 +66,7 @@ namespace ArgonFetch.Application.Services.DDLFetcherServices
                 return string.Empty;
 
             input = WebUtility.HtmlDecode(input); // Decode HTML entities
+            input = Regex.Unescape(input); // Convert Unicode escape sequences properly
             input = Regex.Replace(input, "<.*?>", string.Empty); // Remove HTML tags
             input = input.Replace("\\\"", "\"").Replace("\"", "").Replace("\\/", "/"); // Fix slashes
             input = input.Replace("\\r", "").Replace("\\n", ""); // Removes newline
@@ -74,7 +75,7 @@ namespace ArgonFetch.Application.Services.DDLFetcherServices
             // Replace multiple spaces/newlines with a single space
             input = Regex.Replace(input, @"\s+", " ").Trim();
 
-            // Remove Watermark
+            // Remove Watermark if present
             if (input.Contains("Download without Watermark"))
                 input = input.Split("Download without Watermark")[0];
 

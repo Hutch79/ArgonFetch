@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <button class="action-button download-button" (click)="onDownload()" [disabled]="isDownloading">
+    <button class="action-button download-button" (click)="startDownload()" [disabled]="isDownloading">
       <fa-icon *ngIf="!isDownloading" [icon]="faDownload"></fa-icon>
       <fa-icon *ngIf="isDownloading" [icon]="faSpinner" animation="spin"></fa-icon>
     </button>

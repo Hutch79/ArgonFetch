@@ -1,0 +1,10 @@
+<div *ngIf="isDownloading" class="download-progress-container">
+    <div class="download-progress-bar" [style.width.%]="progress"></div>
+    <div class="download-progress-text">{{ progress }}%</div>
+  </div>
+  
+  <div *ngIf="isDownloading" class="download-stats">
+    <span class="download-speed">{{ downloadSpeedText }}</span>
+    <span class="download-eta">ETA: {{ estimatedTimeText }}</span>
+  </div>
+  
