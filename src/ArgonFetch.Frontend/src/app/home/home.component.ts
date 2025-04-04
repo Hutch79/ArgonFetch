@@ -8,8 +8,8 @@ import { faLink, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { PlaylistContainerComponent } from '../content-results/playlist-container/playlist-container.component';
 import { ModalService } from '../services/modal.service';
 import { ContentSkeletonLoaderComponent } from "../content-skeleton-loader/content-skeleton-loader.component";
+import { FetchService, MediaType, ResourceInformationDto } from '../api';
 import { SingleSongContainerComponent } from '../content-results/single-song-container/single-song-container.component';
-import { FetchService, MediaType, ResourceInformationDto } from '../../../api';
 
 @Component({
   selector: 'app-home',

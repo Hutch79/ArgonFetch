@@ -45,9 +45,7 @@ namespace ArgonFetch.Application.Queries
             var platform = PlatformIdentifierService.IdentifyPlatform(request.Query);
 
             if (platform == Platform.Spotify)
-            {
                 return await HandleSpotify(request.Query, cancellationToken);
-            }
             else if (platform == Platform.TikTok)
                 return await HandleTikTok(request.Query, cancellationToken);
 
@@ -101,7 +99,7 @@ namespace ArgonFetch.Application.Queries
                     }
                 }
 
-                var streamingUrl = resultData.Url ?? await GetBestStreamingUrl(resultData.Formats);
+                var streamingUrl = resultData.Url ?? await GetBestStreamingUrl(resultData.Formats, false);
 
                 return new ResourceInformationDto
                 {
@@ -123,39 +121,85 @@ namespace ArgonFetch.Application.Queries
 
         private async Task<VideoData> Search(string query, OptionSet? options = null)
         {
-            options ??= new OptionSet { DumpSingleJson = true };
+            // Create a list of format fallback options
+            string[] formatFallbacks = new[]
+            {
+                "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]",
+                "bv*[ext=mp4]+ba/b[ext=mp4]",
+                "b[ext=mp4]",
+                "bv*+ba/b"
+            };
 
-            if (!Uri.IsWellFormedUriString(query, UriKind.Absolute))
+
+            VideoData FetchVideoData(string formatString)
             {
                 var searchOptions = new OptionSet
                 {
-                    Format = "best",
+                    DumpSingleJson = true,
                     NoPlaylist = true,
+                    Format = formatString
                 };
 
-                var searchResult = await _youtubeDL.RunVideoDataFetch($"ytsearch:{query}", overrideOptions: searchOptions);
-                query = searchResult.Data.Entries.First().Url;
+                // If query is not a well-formed URI, treat it as a search
+                if (!Uri.IsWellFormedUriString(query, UriKind.Absolute))
+                {
+                    var searchResult = _youtubeDL.RunVideoDataFetch($"ytsearch:{query}", overrideOptions: searchOptions);
+                    query = searchResult.Result.Data.Entries.First().Url;
+                }
+
+                var result = _youtubeDL.RunVideoDataFetch(query, overrideOptions: searchOptions);
+
+                if (!result.Result.Success)
+                {
+                    // Log the error or handle it as needed
+                    Console.WriteLine($"Failed to fetch with format {formatString}: {string.Join(", ", result.Result.ErrorOutput)}");
+                    return null;
+                }
+
+                return result.Result.Data;
             }
 
-            var result = await _youtubeDL.RunVideoDataFetch(query, overrideOptions: options);
-            if (!result.Success)
-                throw new ArgumentException($"Failed to fetch data: {string.Join(", ", result.ErrorOutput)}");
+            // Try different format options
+            foreach (var formatString in formatFallbacks)
+            {
+                var videoData = FetchVideoData(formatString);
+                if (videoData != null)
+                {
+                    return videoData;
+                }
+            }
 
-            return result.Data;
+            // If all format attempts fail
+            throw new ArgumentException($"Failed to fetch video data for query: {query}");
         }
 
-        private async Task<string> GetBestStreamingUrl(FormatData[] formatData)
+        private async Task<string> GetBestStreamingUrl(FormatData[] formatData, bool audioOnly = true)
         {
             if (formatData == null || !formatData.Any())
                 return string.Empty;
 
-            var bestFormat = formatData
-                .Where(f => !string.IsNullOrEmpty(f.AudioCodec) && f.AudioCodec != "none")
-                .OrderByDescending(f => f.AudioBitrate)
-                .ThenByDescending(f => f.AudioSamplingRate)
-                .FirstOrDefault();
+            if (audioOnly)
+            {
+                // Get best audio format
+                var bestAudio = formatData
+                    .Where(f => !string.IsNullOrEmpty(f.AudioCodec) && f.AudioCodec != "none")
+                    .OrderByDescending(f => f.AudioBitrate)
+                    .ThenByDescending(f => f.AudioSamplingRate)
+                    .FirstOrDefault();
 
-            return await Task.FromResult(bestFormat?.Url ?? string.Empty);
+                return await Task.FromResult(bestAudio?.Url ?? string.Empty);
+            }
+            else
+            {
+                // Get best video format (including audio if available)
+                var bestVideo = formatData
+                    .Where(f => !string.IsNullOrEmpty(f.VideoCodec) && f.VideoCodec != "none")
+                    .OrderByDescending(f => (f.Width * f.Height) + f.VideoBitrate) // Best resolution & bitrate
+                    .ThenByDescending(f => f.AudioBitrate) // Prefer videos with higher audio quality
+                    .FirstOrDefault();
+
+                return await Task.FromResult(bestVideo?.Url ?? string.Empty);
+            }
         }
 
         private async Task<ResourceInformationDto> HandleSpotify(string query, CancellationToken cancellationToken)

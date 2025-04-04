@@ -50,17 +50,6 @@
   align-items: center;
   width: 100%;
   position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 50px;
-    background: linear-gradient(to right, transparent, var(--surface));
-    pointer-events: none;
-  }
 }
 
 .song-title {
@@ -82,15 +71,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    background: linear-gradient(to right, transparent, var(--surface));
-    pointer-events: none;
-  }
 }
 
 .song-actions {
@@ -159,7 +139,6 @@
   }
 }
 
-/* Add to your component's SCSS file */
 .download-progress-container {
   width: 100%;
   height: 6px;

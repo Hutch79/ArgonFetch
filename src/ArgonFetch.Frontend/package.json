@@ -4,11 +4,13 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:apigen": "apigen & ng serve",
+    "start:apigen:clean": "npm run apigen & cls & ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "build:agent": "ng build --aot --configuration production --output-path",
-    "api-gen": "npx @openapitools/openapi-generator-cli generate -i http://localhost:5114/swagger/v1/swagger.json -g typescript-angular -o api"
+    "apigen": "npx openapi-generator-cli generate"
   },
   "private": true,
   "dependencies": {

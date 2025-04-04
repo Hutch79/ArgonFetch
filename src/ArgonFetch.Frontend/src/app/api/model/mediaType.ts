@@ -12,8 +12,11 @@
 export type MediaType = 0 | 1 | 2;
 
 export const MediaType = {
+
     NUMBER_0: 0 as MediaType,
+
     NUMBER_1: 1 as MediaType,
+
     NUMBER_2: 2 as MediaType
 };
 

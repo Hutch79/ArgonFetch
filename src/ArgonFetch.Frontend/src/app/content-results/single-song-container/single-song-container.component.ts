@@ -2,9 +2,9 @@ import { Component, Input } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { CommonModule } from '@angular/common';
 import { faDownload, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { ProxyService, ResourceInformationDto } from '../../../../api';
 import { firstValueFrom } from 'rxjs';
 import * as mime from 'mime-types';
+import { ProxyService, ResourceInformationDto } from '../../api';
 
 @Component({
   selector: 'app-single-song-container',
